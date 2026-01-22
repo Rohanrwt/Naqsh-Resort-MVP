@@ -12,6 +12,7 @@
  * - Request logging
  */
 
+require('dotenv').config();
 const http = require('http');
 const fs = require('fs').promises;
 const fsSync = require('fs');
@@ -25,12 +26,13 @@ const crypto = require('crypto');
 const CONFIG = {
     PORT: process.env.PORT || 3000,
     PUBLIC_DIR: path.join(__dirname, 'public'),
+    PROTECTED_DIR: path.join(__dirname, 'protected'),
     DATA_FILE: path.join(__dirname, 'data', 'bookings.json'),
     SESSIONS_FILE: path.join(__dirname, 'data', 'sessions.json'),
     
     // Admin credentials (in production, use environment variables!)
     ADMIN_USERNAME: process.env.ADMIN_USER || 'admin',
-    ADMIN_PASSWORD: process.env.ADMIN_PASS || 'naqsh2025secure',
+    ADMIN_PASSWORD: process.env.ADMIN_PASS || 'admin123',
     
     // Session settings
     SESSION_EXPIRY_HOURS: 24,
@@ -386,13 +388,10 @@ function sendJSON(res, statusCode, data) {
     res.end(body);
 }
 
-
-const zlib = require('zlib');
-
-async function serveStaticFile(res, req, filePath) {
+async function serveStaticFile(res, filePath, baseDir = CONFIG.PUBLIC_DIR) {
     // Prevent directory traversal
     const normalizedPath = path.normalize(filePath);
-    if (!normalizedPath.startsWith(CONFIG.PUBLIC_DIR)) {
+    if (!normalizedPath.startsWith(baseDir)) {
         res.writeHead(403, { 'Content-Type': 'text/plain' });
         res.end('Forbidden');
         return;
@@ -402,57 +401,16 @@ async function serveStaticFile(res, req, filePath) {
     const mimeType = MIME_TYPES[ext] || 'application/octet-stream';
     
     try {
-        const stats = await fs.stat(filePath);
-        const fileContent = await fs.readFile(filePath);
-        
-        // Cache Headers
-        const isImmutable = ['.css', '.js', '.jpg', '.png', '.webp', '.woff2'].includes(ext);
-        const cacheControl = isImmutable ? 'public, max-age=31536000, immutable' : 'public, max-age=0, must-revalidate';
-        const etag = `"${stats.size}-${stats.mtimeMs}"`;
-        
-        // Handle 304 Not Modified
-        if (req.headers['if-none-match'] === etag) {
-            res.writeHead(304, {
-                'ETag': etag,
-                'Cache-Control': cacheControl
-            });
-            res.end();
-            return;
-        }
-
-        const headers = {
+        const data = await fs.readFile(filePath);
+        res.writeHead(200, { 
             'Content-Type': mimeType,
-            'X-Content-Type-Options': 'nosniff',
-            'Cache-Control': cacheControl,
-            'ETag': etag,
-            'Vary': 'Accept-Encoding'
-        };
-
-        // Gzip Compression
-        const acceptEncoding = req.headers['accept-encoding'] || '';
-        if (/\bgzip\b/.test(acceptEncoding) && ['.html', '.css', '.js', '.json', '.svg'].includes(ext)) {
-            zlib.gzip(fileContent, (err, buffer) => {
-                if (!err) {
-                    headers['Content-Encoding'] = 'gzip';
-                    headers['Content-Length'] = buffer.length;
-                    res.writeHead(200, headers);
-                    res.end(buffer);
-                } else {
-                    // Fallback to uncompressed
-                    res.writeHead(200, headers);
-                    res.end(fileContent);
-                }
-            });
-        } else {
-            res.writeHead(200, headers);
-            res.end(fileContent);
-        }
-
+            'X-Content-Type-Options': 'nosniff'
+        });
+        res.end(data);
     } catch (err) {
         if (err.code === 'ENOENT') {
             // Try serving index.html for SPA behavior
             try {
-                // Recursive call for index.html (simplified, no recursion infinite loop risk here)
                 const indexData = await fs.readFile(path.join(CONFIG.PUBLIC_DIR, 'index.html'));
                 res.writeHead(200, { 'Content-Type': 'text/html' });
                 res.end(indexData);
@@ -461,13 +419,11 @@ async function serveStaticFile(res, req, filePath) {
                 res.end('404 Not Found');
             }
         } else {
-            console.error('File Error:', err);
             res.writeHead(500, { 'Content-Type': 'text/plain' });
             res.end('Server Error');
         }
     }
 }
-
 
 function getClientIP(req) {
     return req.headers['x-forwarded-for']?.split(',')[0].trim() || 
@@ -698,7 +654,11 @@ async function handleAPI(req, res, pathname) {
             if (username === CONFIG.ADMIN_USERNAME && password === CONFIG.ADMIN_PASSWORD) {
                 const token = await createSession(username);
                 
+                
                 log('info', 'Admin login successful', { username, ip });
+                
+                // Set cookie
+                res.setHeader('Set-Cookie', `admin_token=${token}; Path=/; HttpOnly; SameSite=Strict; Max-Age=${CONFIG.SESSION_EXPIRY_HOURS * 3600}`);
                 
                 sendJSON(res, 200, {
                     success: true,
@@ -719,6 +679,7 @@ async function handleAPI(req, res, pathname) {
             if (token) {
                 await deleteSession(token);
             }
+            res.setHeader('Set-Cookie', 'admin_token=; Path=/; HttpOnly; SameSite=Strict; Max-Age=0');
             sendJSON(res, 200, { success: true, message: 'Logged out' });
             return;
         }
@@ -898,8 +859,33 @@ async function handleRequest(req, res) {
         return;
     }
     
-    // Only allow GET for static files
-    if (req.method !== 'GET') {
+    // Auth Routes
+    if (pathname === '/admin' || pathname === '/admin.html') {
+        const token = getTokenFromRequest(req);
+        const session = await validateSession(token);
+        
+        if (session) {
+            const filePath = path.join(CONFIG.PROTECTED_DIR, 'admin.html');
+            await serveStaticFile(res, filePath, CONFIG.PROTECTED_DIR);
+        } else {
+            res.writeHead(302, { 'Location': '/login' });
+            res.end();
+        }
+        return;
+    }
+    
+    if (pathname === '/login') {
+        pathname = '/login.html';
+    }
+    
+    // Only allow GET and HEAD for static files
+    if (req.method !== 'GET' && req.method !== 'HEAD') {
+        // For POST to root or other static paths, redirect to GET
+        if (req.method === 'POST') {
+            res.writeHead(302, { 'Location': '/' });
+            res.end();
+            return;
+        }
         res.writeHead(405, { 'Content-Type': 'text/plain' });
         res.end('Method Not Allowed');
         return;
@@ -923,7 +909,7 @@ async function handleRequest(req, res) {
         } catch {}
     }
     
-    await serveStaticFile(res, req, filePath);
+    await serveStaticFile(res, filePath);
 }
 
 // ============================================

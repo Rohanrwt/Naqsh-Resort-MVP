@@ -1,0 +1,28 @@
+{
+  "sessions": [
+    {
+      "token": "7e2d1bcff7415262a5d2d0beaf36cd57cb24c73713b7c388dd4683aa71bfd285",
+      "username": "admin",
+      "expiresAt": 1769171047072,
+      "createdAt": 1769084647073
+    },
+    {
+      "token": "c41c15f410ee4128c6f774ebbe98f229132de311302bf287ac8b31aa0b60d289",
+      "username": "admin",
+      "expiresAt": 1769172121700,
+      "createdAt": 1769085721700
+    },
+    {
+      "token": "8f1c7333f08ce3ce04cd86af38709d1aa68a07fd4e1818f2e038bbaf076c274a",
+      "username": "admin",
+      "expiresAt": 1769174747886,
+      "createdAt": 1769088347888
+    },
+    {
+      "token": "12b42154af1c08d56048f95deb46696b4307b2a1505f6158b82270b3ed0f4eb5",
+      "username": "rohan",
+      "expiresAt": 1769175954070,
+      "createdAt": 1769089554072
+    }
+  ]
+}

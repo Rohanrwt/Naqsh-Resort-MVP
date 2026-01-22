@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Dashboard | Naqsh Resort</title>
-    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="/css/style.css">
     <style>
         .admin-container { max-width: 1200px; margin: 0 auto; padding: 2rem; }
         .admin-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem; }
@@ -51,18 +51,6 @@
         .detail-label { font-weight: 600; color: var(--color-text-light); }
         .detail-value { color: var(--color-text); }
         .loading { text-align: center; padding: 2rem; color: var(--color-text-light); }
-        
-        /* Login Page Styles */
-        .login-container { max-width: 400px; margin: 100px auto; padding: 2rem; }
-        .login-box { background: var(--color-white); padding: 2.5rem; border-radius: var(--radius-lg); box-shadow: var(--shadow-md); }
-        .login-box h1 { text-align: center; color: var(--color-primary); margin-bottom: 0.5rem; }
-        .login-box .subtitle { text-align: center; color: var(--color-text-light); margin-bottom: 2rem; }
-        .login-box .form-group { margin-bottom: 1.5rem; }
-        .login-box label { display: block; margin-bottom: 0.5rem; font-weight: 600; color: var(--color-text); }
-        .login-box input { width: 100%; padding: 0.75rem 1rem; border: 2px solid var(--color-bg-alt); border-radius: var(--radius-sm); font-size: 1rem; transition: border-color 0.2s; }
-        .login-box input:focus { outline: none; border-color: var(--color-primary); }
-        .login-box .btn { width: 100%; padding: 1rem; }
-        .login-error { background: #f8d7da; color: #721c24; padding: 0.75rem 1rem; border-radius: var(--radius-sm); margin-bottom: 1rem; display: none; }
         .header-actions { display: flex; gap: 0.5rem; align-items: center; }
         .user-badge { background: var(--color-bg); padding: 0.5rem 1rem; border-radius: var(--radius-full); font-size: 0.9rem; }
         
@@ -72,33 +60,11 @@
 <body>
     <header id="site-header">
         <div class="logo"><a href="/">Naqsh Resort</a></div>
-        <nav><ul><li><a href="/">Home</a></li><li><a href="rooms.html">Rooms</a></li><li><a href="group-booking.html">Group Trips</a></li><li><a href="contact.html">Contact</a></li></ul></nav>
+        <nav><ul><li><a href="/">Home</a></li><li><a href="/rooms.html">Rooms</a></li><li><a href="/group-booking.html">Group Trips</a></li><li><a href="/contact.html">Contact</a></li></ul></nav>
     </header>
 
-    <!-- LOGIN PAGE -->
-    <div id="login-page" class="login-container">
-        <div class="login-box">
-            <h1>🔐 Admin Login</h1>
-            <p class="subtitle">Enter your credentials to access the dashboard</p>
-            
-            <div id="login-error" class="login-error"></div>
-            
-            <form id="login-form">
-                <div class="form-group">
-                    <label for="username">Username</label>
-                    <input type="text" id="username" name="username" required autocomplete="username">
-                </div>
-                <div class="form-group">
-                    <label for="password">Password</label>
-                    <input type="password" id="password" name="password" required autocomplete="current-password">
-                </div>
-                <button type="submit" class="btn btn-primary">Login</button>
-            </form>
-        </div>
-    </div>
-
-    <!-- DASHBOARD (Hidden until logged in) -->
-    <main id="dashboard-page" class="admin-container" style="display: none;">
+    <!-- DASHBOARD -->
+    <main id="dashboard-page" class="admin-container">
         <div class="admin-header">
             <h1>📊 Admin Dashboard</h1>
             <div class="header-actions">
@@ -150,126 +116,27 @@
     <footer id="site-footer"><div class="footer-bottom"><p>&copy; 2025 Naqsh Resort. Admin Dashboard</p></div></footer>
 
     <script>
-        // ==================
-        // AUTH STATE
-        // ==================
-        let authToken = localStorage.getItem('admin_token');
-        
-        // Check if already logged in
-        checkAuthStatus();
-        
-        async function checkAuthStatus() {
-            if (!authToken) {
-                showLoginPage();
-                return;
-            }
-            
-            try {
-                const response = await fetch('/api/auth/check', {
-                    headers: { 'Authorization': `Bearer ${authToken}` }
-                });
-                const result = await response.json();
-                
-                if (result.authenticated) {
-                    showDashboard(result.username);
-                } else {
-                    localStorage.removeItem('admin_token');
-                    authToken = null;
-                    showLoginPage();
-                }
-            } catch (err) {
-                console.error('Auth check failed:', err);
-                showLoginPage();
-            }
-        }
-        
-        function showLoginPage() {
-            document.getElementById('login-page').style.display = 'block';
-            document.getElementById('dashboard-page').style.display = 'none';
-        }
-        
-        function showDashboard(username) {
-            document.getElementById('login-page').style.display = 'none';
-            document.getElementById('dashboard-page').style.display = 'block';
-            document.getElementById('user-badge').textContent = `👤 ${username || 'Admin'}`;
-            loadAllData();
-        }
-        
-        // ==================
-        // LOGIN
-        // ==================
-        document.getElementById('login-form').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            
-            const username = document.getElementById('username').value;
-            const password = document.getElementById('password').value;
-            const errorEl = document.getElementById('login-error');
-            const submitBtn = e.target.querySelector('button[type="submit"]');
-            
-            submitBtn.disabled = true;
-            submitBtn.textContent = 'Logging in...';
-            errorEl.style.display = 'none';
-            
-            try {
-                const response = await fetch('/api/auth/login', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ username, password })
-                });
-                
-                const result = await response.json();
-                
-                if (result.success) {
-                    authToken = result.token;
-                    localStorage.setItem('admin_token', authToken);
-                    showDashboard(username);
-                } else {
-                    errorEl.textContent = result.message || 'Invalid credentials';
-                    errorEl.style.display = 'block';
-                }
-            } catch (err) {
-                errorEl.textContent = 'Login failed. Please try again.';
-                errorEl.style.display = 'block';
-            } finally {
-                submitBtn.disabled = false;
-                submitBtn.textContent = 'Login';
-            }
-        });
+        // Init
+        loadAllData();
         
         async function logout() {
             try {
-                await fetch('/api/auth/logout', {
-                    method: 'POST',
-                    headers: { 'Authorization': `Bearer ${authToken}` }
-                });
+                await fetch('/api/auth/logout', { method: 'POST' });
             } catch (err) {}
-            
-            localStorage.removeItem('admin_token');
-            authToken = null;
-            showLoginPage();
-            document.getElementById('login-form').reset();
+            window.location.href = '/login';
         }
         
         // ==================
         // API HELPERS
         // ==================
         async function apiRequest(url, options = {}) {
-            const headers = {
-                'Content-Type': 'application/json',
-                ...options.headers
-            };
-            
-            if (authToken) {
-                headers['Authorization'] = `Bearer ${authToken}`;
-            }
+            const headers = { 'Content-Type': 'application/json', ...options.headers };
+            // Cookie is sent automatically
             
             const response = await fetch(url, { ...options, headers });
             
             if (response.status === 401) {
-                // Session expired
-                localStorage.removeItem('admin_token');
-                authToken = null;
-                showLoginPage();
+                window.location.href = '/login';
                 throw new Error('Session expired');
             }
             
@@ -421,9 +288,6 @@
         function closeModal() { document.getElementById('detail-modal').classList.remove('active'); }
         document.getElementById('detail-modal').addEventListener('click', (e) => { if (e.target.id === 'detail-modal') closeModal(); });
 
-        // ==================
-        // UTILITIES
-        // ==================
         function formatDate(dateStr) { 
             if (!dateStr) return '-'; 
             return new Date(dateStr).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }); 

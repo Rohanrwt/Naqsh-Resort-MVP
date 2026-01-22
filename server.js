@@ -147,9 +147,132 @@ async function handleAPI(req, res, pathname) {
             return;
         }
 
+        // Pricing config (for frontend)
+        if (pathname === '/api/pricing' && method === 'GET') {
+            sendJSON(res, 200, {
+                success: true,
+                pricing: {
+                    group: { rate: 60000 },
+                    rooms: {
+                        "Deluxe Garden": { weekday: { ep: 1700, mapai: 2700 }, weekend: { ep: 2200, mapai: 3200 } },
+                        "Premium Valley": { weekday: { ep: 2000, mapai: 3000 }, weekend: { ep: 2600, mapai: 3600 } },
+                        "Family Suite": { weekday: { ep: 2700, mapai: 4300 }, weekend: { ep: 3500, mapai: 5500 } }
+                    }
+                }
+            });
+            return;
+        }
+
+        // Calculate price (server-side)
+        if (pathname === '/api/calculate-price' && method === 'POST') {
+            const body = await parseBody(req);
+            const checkIn = body.checkIn;
+            const checkOut = body.checkOut;
+            const roomType = body.roomType || 'Deluxe Garden';
+            const mealPlan = body.mealPlan || 'EP';
+            const isGroup = body.isGroupBooking || false;
+            
+            const PRICING = {
+                group: { rate: 60000 },
+                rooms: {
+                    "Deluxe Garden": { weekday: { ep: 1700, mapai: 2700 }, weekend: { ep: 2200, mapai: 3200 } },
+                    "Premium Valley": { weekday: { ep: 2000, mapai: 3000 }, weekend: { ep: 2600, mapai: 3600 } },
+                    "Family Suite": { weekday: { ep: 2700, mapai: 4300 }, weekend: { ep: 3500, mapai: 5500 } }
+                }
+            };
+            
+            if (!checkIn || !checkOut) {
+                sendJSON(res, 400, { success: false, message: 'Invalid dates' });
+                return;
+            }
+            
+            const startDate = new Date(checkIn);
+            const endDate = new Date(checkOut);
+            
+            if (isNaN(startDate.getTime()) || isNaN(endDate.getTime()) || startDate >= endDate) {
+                sendJSON(res, 400, { success: false, message: 'Invalid date range' });
+                return;
+            }
+            
+            let total = 0;
+            const breakdown = [];
+            
+            for (let d = new Date(startDate); d < endDate; d.setDate(d.getDate() + 1)) {
+                const dayOfWeek = d.getDay();
+                const isWeekend = (dayOfWeek === 5 || dayOfWeek === 6);
+                const dateStr = d.toISOString().split('T')[0];
+                
+                let rate = 0;
+                if (isGroup) {
+                    rate = PRICING.group.rate;
+                } else {
+                    const room = PRICING.rooms[roomType];
+                    if (room) {
+                        const planKey = mealPlan === 'MAPAI' ? 'mapai' : 'ep';
+                        rate = isWeekend ? room.weekend[planKey] : room.weekday[planKey];
+                    }
+                }
+                
+                total += rate;
+                breakdown.push({ date: dateStr, isWeekend, rate });
+            }
+            
+            sendJSON(res, 200, {
+                success: true,
+                total,
+                nights: breakdown.length,
+                breakdown,
+                roomType: isGroup ? 'Full Resort' : roomType,
+                mealPlan: isGroup ? 'Included' : mealPlan
+            });
+            return;
+        }
+
         // Create booking
         if (pathname === '/api/bookings' && method === 'POST') {
             const body = await parseBody(req);
+            
+            // Server-side price calculation
+            const PRICING = {
+                group: { rate: 60000 },
+                rooms: {
+                    "Deluxe Garden": { weekday: { ep: 1700, mapai: 2700 }, weekend: { ep: 2200, mapai: 3200 } },
+                    "Premium Valley": { weekday: { ep: 2000, mapai: 3000 }, weekend: { ep: 2600, mapai: 3600 } },
+                    "Family Suite": { weekday: { ep: 2700, mapai: 4300 }, weekend: { ep: 3500, mapai: 5500 } }
+                }
+            };
+            
+            const isGroup = body.isGroupBooking || false;
+            const roomType = isGroup ? 'Full Resort' : (body.roomType || 'Deluxe Garden');
+            const mealPlan = body.mealPlan || 'EP';
+            
+            // Calculate total server-side (never trust client!)
+            let totalAmount = 0;
+            let nights = 0;
+            
+            if (body.checkIn && body.checkOut) {
+                const startDate = new Date(body.checkIn);
+                const endDate = new Date(body.checkOut);
+                
+                if (!isNaN(startDate.getTime()) && !isNaN(endDate.getTime()) && startDate < endDate) {
+                    for (let d = new Date(startDate); d < endDate; d.setDate(d.getDate() + 1)) {
+                        const dayOfWeek = d.getDay();
+                        const isWeekend = (dayOfWeek === 5 || dayOfWeek === 6);
+                        
+                        if (isGroup) {
+                            totalAmount += PRICING.group.rate;
+                        } else {
+                            const room = PRICING.rooms[roomType];
+                            if (room) {
+                                const planKey = mealPlan === 'MAPAI' ? 'mapai' : 'ep';
+                                totalAmount += isWeekend ? room.weekend[planKey] : room.weekday[planKey];
+                            }
+                        }
+                        nights++;
+                    }
+                }
+            }
+            
             const data = readData();
             
             const booking = {
@@ -159,11 +282,12 @@ async function handleAPI(req, res, pathname) {
                 guestEmail: body.guestEmail || '',
                 checkIn: body.checkIn,
                 checkOut: body.checkOut,
-                roomType: body.roomType || 'Not specified',
-                isGroupBooking: body.isGroupBooking || false,
+                roomType: roomType,
+                isGroupBooking: isGroup,
                 guests: body.guests || 2,
-                mealPlan: body.mealPlan || 'EP',
-                totalAmount: body.totalAmount || 0,
+                mealPlan: isGroup ? 'Included' : mealPlan,
+                totalAmount: totalAmount, // Server-calculated!
+                nights: nights,
                 status: 'Pending',
                 createdAt: new Date().toISOString(),
                 notes: body.notes || ''
@@ -172,11 +296,16 @@ async function handleAPI(req, res, pathname) {
             data.bookings.push(booking);
             writeData(data);
             
-            console.log(`[${new Date().toISOString()}] New booking created: ${booking.id}`);
+            console.log(`[${new Date().toISOString()}] New booking created: ${booking.id} (₹${totalAmount})`);
             
             sendJSON(res, 201, {
                 success: true,
-                data: booking,
+                data: {
+                    id: booking.id,
+                    totalAmount: booking.totalAmount,
+                    nights: booking.nights,
+                    roomType: booking.roomType
+                },
                 message: 'Booking request received! We will contact you shortly.'
             });
             return;
@@ -350,9 +479,34 @@ const server = http.createServer(async (req, res) => {
     
     console.log(`[${new Date().toISOString()}] ${req.method} ${pathname}`);
     
+    // Handle CORS preflight
+    if (req.method === 'OPTIONS') {
+        res.writeHead(204, {
+            'Access-Control-Allow-Origin': '*',
+            'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+            'Access-Control-Allow-Headers': 'Content-Type'
+        });
+        res.end();
+        return;
+    }
+    
     // Handle API routes
     if (pathname.startsWith('/api/')) {
         await handleAPI(req, res, pathname);
+        return;
+    }
+    
+    // For non-API paths, only allow GET (POST to root should redirect)
+    if (req.method === 'POST') {
+        // Redirect POST to root back to GET (happens when form submits before JS loads)
+        res.writeHead(302, { 'Location': '/' });
+        res.end();
+        return;
+    }
+    
+    if (req.method !== 'GET' && req.method !== 'HEAD') {
+        res.writeHead(405, { 'Content-Type': 'text/plain' });
+        res.end('Method Not Allowed');
         return;
     }
     
