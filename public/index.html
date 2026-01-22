@@ -1,0 +1,409 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <!-- SEO: One clear, keyword-focused title -->
+    <title>Naqsh Resort | Boutique Resort in Rishikesh</title>
+
+    <!-- SEO: Meta description for search results -->
+    <meta
+      name="description"
+      content="Escape to Naqsh Resort in Rishikesh. Valley views, peaceful stays, and group trip packages. Book directly for best rates."
+    />
+
+    <link rel="stylesheet" href="css/style.css" />
+  </head>
+  <body>
+    <!-- 
+        HEADER: Contains logo + navigation
+        Kept outside <main> because it's not the main content
+    -->
+    <header id="site-header">
+      <div class="logo">
+        <a href="/">Naqsh Resort</a>
+      </div>
+
+      <!-- Mobile Menu Toggle Button -->
+      <button id="mobile-menu-toggle" aria-label="Toggle navigation">
+        <span class="bar"></span>
+        <span class="bar"></span>
+        <span class="bar"></span>
+      </button>
+
+      <!-- 
+            NAV: Semantic tag for navigation
+            Screen readers announce this as "navigation"
+            Only 4 links - minimal, focused
+        -->
+      <nav>
+        <ul>
+          <li><a href="/">Home</a></li>
+          <li><a href="rooms.html">Rooms</a></li>
+          <li><a href="group-booking.html">Group Trips</a></li>
+          <li><a href="contact.html">Contact</a></li>
+        </ul>
+      </nav>
+    </header>
+
+    <!-- 
+        MAIN: Wraps all primary content
+        Important for accessibility - tells screen readers "content starts here"
+    -->
+    <main>
+      <!-- 
+            HERO SECTION
+            Job: Create emotional pull + ONE clear action
+            Not selling yet, just hooking them
+        -->
+      <section id="hero">
+        <div class="hero-content">
+          <p class="hero-trust">🏆 Rated 4.8/5 on Google Reviews</p>
+          <h1>Experience the<br>Silence of the Valley</h1>
+          <p class="hero-subtitle">
+            A 12-room boutique hideaway in Rishikesh.<br>No crowds. No chaos. Just nature.
+          </p>
+          <a href="#availability" class="btn btn-primary">Book Your Stay</a>
+        </div>
+        <!-- Background image will be added via CSS -->
+      </section>
+
+      <!-- 
+            AVAILABILITY SECTION
+            Job: The conversion engine. This is where bookings start.
+            Two paths: Individual rooms OR Full property
+        -->
+      <section id="availability">
+        <h2>Plan Your Stay</h2>
+
+        <!-- Room Types Display (Visual Selection) -->
+        <div class="room-cards-container">
+            <!-- Room 1 -->
+            <div class="room-card-mini">
+                <img src="images/8.jpg" alt="Deluxe Garden" loading="lazy">
+                <div class="room-mini-info">
+                    <h4>Deluxe Garden</h4>
+                    <div class="price-list">
+                        <span class="price-item">Weekday: ₹1,700</span>
+                        <span class="price-item">Weekend: ₹2,200</span>
+                    </div>
+                    <p class="desc">Cozy ground floor room with garden view.</p>
+                </div>
+            </div>
+            
+            <!-- Room 2 -->
+            <div class="room-card-mini">
+                <img src="images/4.jpg" alt="Premium Valley" loading="lazy">
+                <div class="room-mini-info">
+                    <h4>Premium Valley</h4>
+                    <div class="price-list">
+                        <span class="price-item">Weekday: ₹2,000</span>
+                        <span class="price-item">Weekend: ₹2,600</span>
+                    </div>
+                    <p class="desc">Upper floor with panoramic valley views.</p>
+                </div>
+            </div>
+
+            <!-- Room 3 -->
+            <div class="room-card-mini">
+                <img src="images/11.jpg" alt="Family Suite" loading="lazy">
+                <div class="room-mini-info">
+                    <h4>Family Suite</h4>
+                    <div class="price-list">
+                        <span class="price-item">Weekday: ₹2,700</span>
+                        <span class="price-item">Weekend: ₹3,500</span>
+                    </div>
+                    <p class="desc">Spacious suite. 4 Beddings available.</p>
+                </div>
+            </div>
+        </div>
+
+        <form id="availability-form" action="#" method="POST">
+          
+          <!-- Booking Mode Toggle -->
+          <div class="booking-mode-toggle">
+            <label class="mode-option active" id="mode-room">
+                <input type="radio" name="booking-mode" value="room" checked>
+                <span>Book a Room</span>
+            </label>
+            <label class="mode-option" id="mode-group">
+                <input type="radio" name="booking-mode" value="group">
+                <span>Book Full Resort (Group)</span>
+            </label>
+          </div>
+
+          <!-- Grid Container for Inputs -->
+          <div class="form-grid-layout">
+              
+              <div class="form-group">
+                <label for="checkin">Check-in</label>
+                <input type="date" id="checkin" name="checkin" required />
+              </div>
+
+              <div class="form-group">
+                <label for="checkout">Check-out</label>
+                <input type="date" id="checkout" name="checkout" required />
+              </div>
+
+              <!-- Personal Details -->
+              <div class="form-group">
+                  <label for="guest-name">Full Name</label>
+                  <input type="text" id="guest-name" name="guest-name" placeholder="John Doe" required>
+              </div>
+
+              <div class="form-group">
+                  <label for="guest-phone">Phone Number</label>
+                  <input type="tel" id="guest-phone" name="guest-phone" placeholder="+91 99999 99999" required>
+              </div>
+
+              <!-- Room Selection (Hidden if Group Mode) -->
+              <div class="form-group form-full-width" id="room-select-group">
+                 <label>Select Room</label>
+                 <select id="room-type" name="room-type">
+                     <option value="" disabled selected>Choose your room...</option>
+                     <option value="Deluxe Garden">Deluxe Garden</option>
+                     <option value="Premium Valley">Premium Valley</option>
+                     <option value="Family Suite">Family Suite (4 Beddings)</option>
+                 </select>
+              </div>
+
+              <div class="form-group" style="grid-column: 1 / -1;">
+                <label for="guests">Guests</label>
+                <select id="guests" name="guests" required>
+                  <option value="2" selected>2 Guests</option>
+                  <option value="3">3 Guests</option>
+                  <option value="4">4 Guests</option>
+                  <option value="5">5-10 Guests</option>
+                  <option value="10">10-30 Guests (Group)</option>
+                </select>
+              </div>
+
+              <!-- Meal Plan Selection -->
+              <div class="form-group meal-plan-group" id="meal-plan-select-group">
+                <label style="margin-bottom:10px; display:block;">Meal Plan</label>
+                <div class="radio-options">
+                    <label class="radio-label">
+                        <input type="radio" name="meal-plan" value="Room Only (EP)" checked>
+                        <span>Room Only (EP)</span>
+                    </label>
+                    <label class="radio-label">
+                        <input type="radio" name="meal-plan" value="Breakfast + Dinner (MAPAI)">
+                        <span>Breakfast + Dinner (MAPAI) <small>Includes 2 meals</small></span>
+                    </label>
+                </div>
+              </div>
+
+          </div><!-- End Grid -->
+
+          <!-- Live Price Summary -->
+          <div id="price-summary" class="price-summary hidden">
+            <h3>Booking Summary</h3>
+            <div id="price-breakdown">
+                <!-- JS will inject table here -->
+                <p class="placeholder-text">Select dates and room to see price.</p>
+            </div>
+            <div class="total-row">
+                <span>Total Amount</span>
+                <span id="total-amount">₹0</span>
+            </div>
+          </div>
+
+          <button type="submit" class="btn btn-primary" style="width:100%; margin-top:20px;">
+            Check Availability on WhatsApp
+          </button>
+        </form>
+
+        <!-- Trust Signals -->
+        <div class="trust-signals">
+          <span>✓ Best Rates Guaranteed</span>
+          <span>✓ No Hidden Fees</span>
+          <span>✓ Pay at Property</span>
+        </div>
+
+        <!-- Group booking info - shown when "Book Entire Resort" is selected -->
+        <div id="group-info" class="hidden">
+          <p class="price-highlight">₹60,000 per night</p>
+          <p>Up to 30 guests • Bonfire • BBQ • Music Night</p>
+        </div>
+      </section>
+
+      <!-- 
+            WHY NAQSH SECTION
+            Job: Handle objections, build trust
+            Not "about us" - it's "why this is right for YOU"
+        -->
+      <section id="why-naqsh">
+        <h2>Why Naqsh?</h2>
+
+        <div class="reasons-grid">
+          <!-- Reason 1 -->
+          <div class="reason">
+            <h3>Valley, Not Highway</h3>
+            <p>
+              Most Rishikesh resorts sit on noisy roads. We're tucked in
+              Mohanchatti, overlooking the valley.
+            </p>
+          </div>
+
+          <!-- Reason 2 -->
+          <div class="reason">
+            <h3>12 Rooms, Not 120</h3>
+            <p>
+              Small enough to feel private. No crowded pools or buffet chaos.
+            </p>
+          </div>
+
+          <!-- Reason 3 -->
+          <div class="reason">
+            <h3>Honest Pricing</h3>
+            <p>
+              What you see is what you pay. No hidden charges, no surge pricing
+              drama.
+            </p>
+          </div>
+
+          <!-- Reason 4 -->
+          <div class="reason">
+            <h3>Group-Friendly</h3>
+            <p>
+              Book the entire property for your squad. Bonfire, BBQ, and music
+              included.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <!-- 
+            GALLERY SECTION
+            Job: Visual inspiration
+        -->
+      <section id="gallery">
+        <h2>A Glimpse of Naqsh</h2>
+        <div class="gallery-grid">
+          <div class="gallery-item">
+            <img src="images/1.jpg" alt="Resort ambiance" loading="lazy" />
+          </div>
+          <div class="gallery-item">
+            <img src="images/3.jpg" alt="Cozy rooms" loading="lazy" />
+          </div>
+          <div class="gallery-item">
+            <img src="images/8.jpg" alt="Outdoor view" loading="lazy" />
+          </div>
+          <div class="gallery-item">
+            <img src="images/11.jpg" alt="Evening vibes" loading="lazy" />
+          </div>
+          <div class="gallery-item">
+            <img src="images/2.jpg" alt="Valley scenery" loading="lazy" />
+          </div>
+          <div class="gallery-item">
+            <img src="images/6.jpg" alt="Night view" loading="lazy" />
+          </div>
+        </div>
+      </section>
+
+      <!-- 
+            TESTIMONIALS SECTION
+            Job: Social proof from real guests
+            MVP Doc: Link to Google Maps reviews for authenticity
+        -->
+      <section id="testimonials">
+        <h2>What Guests Say</h2>
+
+        <!-- Google Rating Badge -->
+        <div class="google-rating">
+          <span class="rating-score">4.8</span>
+          <span class="rating-stars">★★★★★</span>
+          <span class="rating-source">Google Reviews</span>
+        </div>
+
+        <div class="testimonials-grid">
+          <!-- Testimonial 1 -->
+          <blockquote class="testimonial">
+            <p>
+              "Finally a place in Rishikesh that's actually peaceful. No
+              honking, no crowd. Just valley views and birds."
+            </p>
+            <footer>
+              <cite>— Amit K.</cite>
+            </footer>
+          </blockquote>
+
+          <!-- Testimonial 2 -->
+          <blockquote class="testimonial">
+            <p>
+              "We booked the entire resort for our friend group. The bonfire
+              night was unforgettable."
+            </p>
+            <footer>
+              <cite>— Priya M.</cite>
+            </footer>
+          </blockquote>
+
+          <!-- Testimonial 3 -->
+          <blockquote class="testimonial">
+            <p>"Clean rooms, honest staff, no overcharging. Will come back."</p>
+            <footer>
+              <cite>— Rahul S.</cite>
+            </footer>
+          </blockquote>
+        </div>
+
+        <!-- Link to actual Google reviews for credibility -->
+        <a href="#" class="btn btn-secondary">See All Reviews on Google</a>
+      </section>
+    </main>
+
+    <!-- 
+        FOOTER
+        Job: Trust signals, quick links, contact info
+        NAP consistency important for local SEO (Name, Address, Phone)
+    -->
+    <footer id="site-footer">
+      <div class="footer-grid">
+        <!-- Contact Info -->
+        <div class="footer-section">
+          <h4>Contact</h4>
+          <address>
+            <p>Naqsh Resort</p>
+            <p>Mohanchatti, Rishikesh</p>
+            <p>Uttarakhand, India</p>
+            <p><a href="tel:+919045467967">+91 9045467967</a></p>
+            <p>
+              <a href="/cdn-cgi/l/email-protection#abd8dfcad2ebc5cadad8c3d9ced8c4d9df85c8c4c6"><span class="__cf_email__" data-cfemail="89fafde8f0c9e7e8f8fae1fbecfae6fbfda7eae6e4">[email&#160;protected]</span></a>
+            </p>
+          </address>
+        </div>
+
+        <!-- Quick Links -->
+        <div class="footer-section">
+          <h4>Quick Links</h4>
+          <ul>
+            <li><a href="rooms.html">Our Rooms</a></li>
+            <li><a href="group-booking.html">Group Bookings</a></li>
+            <li><a href="contact.html">Contact Us</a></li>
+          </ul>
+        </div>
+
+        <!-- Trust/Legal -->
+        <div class="footer-section">
+          <h4>Policies</h4>
+          <ul>
+            <li><a href="cancellation.html">Cancellation Policy</a></li>
+            <li><a href="terms.html">Terms & Conditions</a></li>
+            <li><a href="privacy.html">Privacy Policy</a></li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="footer-bottom">
+        <p>&copy; 2025 Naqsh Resort. All rights reserved.</p>
+      </div>
+    </footer>
+
+    <!-- Floating WhatsApp Button -->
+    <a href="https://wa.me/919045467967" class="whatsapp-float" target="_blank" aria-label="Chat on WhatsApp">
+      <svg viewBox="0 0 24 24" fill="currentColor" width="32" height="32">
+        <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.008-.57-.008-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/>
+      </svg>
+      Chat with us

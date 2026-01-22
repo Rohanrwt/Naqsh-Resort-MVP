@@ -1,0 +1,16 @@
+{
+  "name": "naqsh-resort",
+  "version": "1.0.0",
+  "description": "Naqsh Resort Booking Website - MVP",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "keywords": [
+    "resort",
+    "booking",
+    "nodejs"
+  ],
+  "author": "Naqsh Resort",
+  "license": "ISC"
+}

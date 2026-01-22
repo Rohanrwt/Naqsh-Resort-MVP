@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard | Naqsh Resort</title>
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        .admin-container { max-width: 1200px; margin: 0 auto; padding: 2rem; }
+        .admin-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem; }
+        .admin-header h1 { color: var(--color-primary); margin: 0; }
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1.5rem; margin-bottom: 2rem; }
+        .stat-card { background: var(--color-white); padding: 1.5rem; border-radius: var(--radius-md); box-shadow: var(--shadow-sm); text-align: center; }
+        .stat-card h3 { font-size: 2.5rem; color: var(--color-accent); margin-bottom: 0.5rem; }
+        .stat-card p { color: var(--color-text-light); margin: 0; font-size: 0.9rem; }
+        .tabs { display: flex; gap: 0.5rem; margin-bottom: 1.5rem; border-bottom: 2px solid var(--color-bg-alt); padding-bottom: 0.5rem; }
+        .tab-btn { padding: 0.75rem 1.5rem; border: none; background: transparent; cursor: pointer; font-family: var(--font-body); font-size: 1rem; font-weight: 600; color: var(--color-text-light); border-radius: var(--radius-sm) var(--radius-sm) 0 0; transition: all 0.2s ease; }
+        .tab-btn:hover { color: var(--color-primary); }
+        .tab-btn.active { background: var(--color-primary); color: var(--color-white); }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        .data-table { width: 100%; border-collapse: collapse; background: var(--color-white); border-radius: var(--radius-md); overflow: hidden; box-shadow: var(--shadow-sm); }
+        .data-table th, .data-table td { padding: 1rem; text-align: left; border-bottom: 1px solid var(--color-bg-alt); }
+        .data-table th { background: var(--color-primary); color: var(--color-white); font-weight: 600; font-size: 0.9rem; }
+        .data-table tr:hover { background: var(--color-bg); }
+        .data-table td { font-size: 0.9rem; }
+        .status-badge { display: inline-block; padding: 0.25rem 0.75rem; border-radius: var(--radius-full); font-size: 0.8rem; font-weight: 600; }
+        .status-pending { background: #fff3cd; color: #856404; }
+        .status-confirmed { background: #d4edda; color: #155724; }
+        .status-cancelled { background: #f8d7da; color: #721c24; }
+        .status-new { background: #cce5ff; color: #004085; }
+        .action-btn { padding: 0.4rem 0.8rem; border: none; border-radius: var(--radius-sm); cursor: pointer; font-size: 0.8rem; font-weight: 600; margin-right: 0.25rem; transition: all 0.2s ease; }
+        .btn-confirm { background: #28a745; color: white; }
+        .btn-confirm:hover { background: #218838; }
+        .btn-cancel { background: #dc3545; color: white; }
+        .btn-cancel:hover { background: #c82333; }
+        .btn-view { background: var(--color-primary); color: white; }
+        .btn-view:hover { background: var(--color-primary-dark); }
+        .refresh-btn { background: var(--color-bg); border: 2px solid var(--color-primary); color: var(--color-primary); padding: 0.75rem 1.5rem; border-radius: var(--radius-full); cursor: pointer; font-weight: 600; transition: all 0.2s ease; }
+        .refresh-btn:hover { background: var(--color-primary); color: white; }
+        .logout-btn { background: #dc3545; border: none; color: white; padding: 0.75rem 1.5rem; border-radius: var(--radius-full); cursor: pointer; font-weight: 600; }
+        .empty-state { text-align: center; padding: 3rem; color: var(--color-text-light); }
+        .empty-state h3 { margin-top: 1rem; }
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 10000; align-items: center; justify-content: center; }
+        .modal.active { display: flex; }
+        .modal-content { background: white; padding: 2rem; border-radius: var(--radius-lg); max-width: 500px; width: 90%; max-height: 80vh; overflow-y: auto; }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; }
+        .modal-header h2 { margin: 0; }
+        .modal-close { background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--color-text-light); }
+        .detail-row { display: flex; justify-content: space-between; padding: 0.75rem 0; border-bottom: 1px solid var(--color-bg-alt); }
+        .detail-label { font-weight: 600; color: var(--color-text-light); }
+        .detail-value { color: var(--color-text); }
+        .loading { text-align: center; padding: 2rem; color: var(--color-text-light); }
+        
+        /* Login Page Styles */
+        .login-container { max-width: 400px; margin: 100px auto; padding: 2rem; }
+        .login-box { background: var(--color-white); padding: 2.5rem; border-radius: var(--radius-lg); box-shadow: var(--shadow-md); }
+        .login-box h1 { text-align: center; color: var(--color-primary); margin-bottom: 0.5rem; }
+        .login-box .subtitle { text-align: center; color: var(--color-text-light); margin-bottom: 2rem; }
+        .login-box .form-group { margin-bottom: 1.5rem; }
+        .login-box label { display: block; margin-bottom: 0.5rem; font-weight: 600; color: var(--color-text); }
+        .login-box input { width: 100%; padding: 0.75rem 1rem; border: 2px solid var(--color-bg-alt); border-radius: var(--radius-sm); font-size: 1rem; transition: border-color 0.2s; }
+        .login-box input:focus { outline: none; border-color: var(--color-primary); }
+        .login-box .btn { width: 100%; padding: 1rem; }
+        .login-error { background: #f8d7da; color: #721c24; padding: 0.75rem 1rem; border-radius: var(--radius-sm); margin-bottom: 1rem; display: none; }
+        .header-actions { display: flex; gap: 0.5rem; align-items: center; }
+        .user-badge { background: var(--color-bg); padding: 0.5rem 1rem; border-radius: var(--radius-full); font-size: 0.9rem; }
+        
+        @media (max-width: 768px) { .data-table { display: block; overflow-x: auto; } .admin-container { padding: 1rem; } }
+    </style>
+</head>
+<body>
+    <header id="site-header">
+        <div class="logo"><a href="/">Naqsh Resort</a></div>
+        <nav><ul><li><a href="/">Home</a></li><li><a href="rooms.html">Rooms</a></li><li><a href="group-booking.html">Group Trips</a></li><li><a href="contact.html">Contact</a></li></ul></nav>
+    </header>
+
+    <!-- LOGIN PAGE -->
+    <div id="login-page" class="login-container">
+        <div class="login-box">
+            <h1>🔐 Admin Login</h1>
+            <p class="subtitle">Enter your credentials to access the dashboard</p>
+            
+            <div id="login-error" class="login-error"></div>
+            
+            <form id="login-form">
+                <div class="form-group">
+                    <label for="username">Username</label>
+                    <input type="text" id="username" name="username" required autocomplete="username">
+                </div>
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" name="password" required autocomplete="current-password">
+                </div>
+                <button type="submit" class="btn btn-primary">Login</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- DASHBOARD (Hidden until logged in) -->
+    <main id="dashboard-page" class="admin-container" style="display: none;">
+        <div class="admin-header">
+            <h1>📊 Admin Dashboard</h1>
+            <div class="header-actions">
+                <span class="user-badge" id="user-badge">👤 Admin</span>
+                <button class="refresh-btn" onclick="loadAllData()">🔄 Refresh</button>
+                <button class="logout-btn" onclick="logout()">Logout</button>
+            </div>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-card"><h3 id="stat-total-bookings">-</h3><p>Total Bookings</p></div>
+            <div class="stat-card"><h3 id="stat-pending">-</h3><p>Pending</p></div>
+            <div class="stat-card"><h3 id="stat-confirmed">-</h3><p>Confirmed</p></div>
+            <div class="stat-card"><h3 id="stat-inquiries">-</h3><p>New Inquiries</p></div>
+            <div class="stat-card"><h3 id="stat-revenue">₹0</h3><p>This Month</p></div>
+        </div>
+
+        <div class="tabs">
+            <button class="tab-btn active" data-tab="bookings">Bookings</button>
+            <button class="tab-btn" data-tab="inquiries">Inquiries</button>
+        </div>
+
+        <div id="bookings-tab" class="tab-content active">
+            <div id="bookings-loading" class="loading">Loading bookings...</div>
+            <table class="data-table" id="bookings-table" style="display: none;">
+                <thead><tr><th>ID</th><th>Guest</th><th>Phone</th><th>Dates</th><th>Room</th><th>Amount</th><th>Status</th><th>Actions</th></tr></thead>
+                <tbody id="bookings-body"></tbody>
+            </table>
+            <div id="bookings-empty" class="empty-state" style="display: none;"><h3>📅 No Bookings Yet</h3><p>Bookings will appear here when guests make reservations.</p></div>
+        </div>
+
+        <div id="inquiries-tab" class="tab-content">
+            <div id="inquiries-loading" class="loading">Loading inquiries...</div>
+            <table class="data-table" id="inquiries-table" style="display: none;">
+                <thead><tr><th>ID</th><th>Name</th><th>Phone</th><th>Type</th><th>Message</th><th>Date</th><th>Status</th></tr></thead>
+                <tbody id="inquiries-body"></tbody>
+            </table>
+            <div id="inquiries-empty" class="empty-state" style="display: none;"><h3>📧 No Inquiries Yet</h3><p>Contact form submissions will appear here.</p></div>
+        </div>
+    </main>
+
+    <div class="modal" id="detail-modal">
+        <div class="modal-content">
+            <div class="modal-header"><h2>Booking Details</h2><button class="modal-close" onclick="closeModal()">&times;</button></div>
+            <div id="modal-body"></div>
+        </div>
+    </div>
+
+    <footer id="site-footer"><div class="footer-bottom"><p>&copy; 2025 Naqsh Resort. Admin Dashboard</p></div></footer>
+
+    <script>
+        // ==================
+        // AUTH STATE
+        // ==================
+        let authToken = localStorage.getItem('admin_token');
+        
+        // Check if already logged in
+        checkAuthStatus();
+        
+        async function checkAuthStatus() {
+            if (!authToken) {
+                showLoginPage();
+                return;
+            }
+            
+            try {
+                const response = await fetch('/api/auth/check', {
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+                const result = await response.json();
+                
+                if (result.authenticated) {
+                    showDashboard(result.username);
+                } else {
+                    localStorage.removeItem('admin_token');
+                    authToken = null;
+                    showLoginPage();
+                }
+            } catch (err) {
+                console.error('Auth check failed:', err);
+                showLoginPage();
+            }
+        }
+        
+        function showLoginPage() {
+            document.getElementById('login-page').style.display = 'block';
+            document.getElementById('dashboard-page').style.display = 'none';
+        }
+        
+        function showDashboard(username) {
+            document.getElementById('login-page').style.display = 'none';
+            document.getElementById('dashboard-page').style.display = 'block';
+            document.getElementById('user-badge').textContent = `👤 ${username || 'Admin'}`;
+            loadAllData();
+        }
+        
+        // ==================
+        // LOGIN
+        // ==================
+        document.getElementById('login-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            const errorEl = document.getElementById('login-error');
+            const submitBtn = e.target.querySelector('button[type="submit"]');
+            
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Logging in...';
+            errorEl.style.display = 'none';
+            
+            try {
+                const response = await fetch('/api/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    authToken = result.token;
+                    localStorage.setItem('admin_token', authToken);
+                    showDashboard(username);
+                } else {
+                    errorEl.textContent = result.message || 'Invalid credentials';
+                    errorEl.style.display = 'block';
+                }
+            } catch (err) {
+                errorEl.textContent = 'Login failed. Please try again.';
+                errorEl.style.display = 'block';
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Login';
+            }
+        });
+        
+        async function logout() {
+            try {
+                await fetch('/api/auth/logout', {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+            } catch (err) {}
+            
+            localStorage.removeItem('admin_token');
+            authToken = null;
+            showLoginPage();
+            document.getElementById('login-form').reset();
+        }
+        
+        // ==================
+        // API HELPERS
+        // ==================
+        async function apiRequest(url, options = {}) {
+            const headers = {
+                'Content-Type': 'application/json',
+                ...options.headers
+            };
+            
+            if (authToken) {
+                headers['Authorization'] = `Bearer ${authToken}`;
+            }
+            
+            const response = await fetch(url, { ...options, headers });
+            
+            if (response.status === 401) {
+                // Session expired
+                localStorage.removeItem('admin_token');
+                authToken = null;
+                showLoginPage();
+                throw new Error('Session expired');
+            }
+            
+            return response.json();
+        }
+        
+        // ==================
+        // TAB SWITCHING
+        // ==================
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+                document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                btn.classList.add('active');
+                document.getElementById(`${btn.dataset.tab}-tab`).classList.add('active');
+            });
+        });
+
+        // ==================
+        // DATA LOADING
+        // ==================
+        async function loadAllData() {
+            await loadStats();
+            await loadBookings();
+            await loadInquiries();
+        }
+
+        async function loadStats() {
+            try {
+                const result = await apiRequest('/api/stats');
+                if (result.success) {
+                    const s = result.stats;
+                    document.getElementById('stat-total-bookings').textContent = s.totalBookings;
+                    document.getElementById('stat-pending').textContent = s.pendingBookings;
+                    document.getElementById('stat-confirmed').textContent = s.confirmedBookings;
+                    document.getElementById('stat-inquiries').textContent = s.newInquiries;
+                    document.getElementById('stat-revenue').textContent = `₹${s.thisMonthRevenue.toLocaleString('en-IN')}`;
+                }
+            } catch (err) { console.error('Failed to load stats:', err); }
+        }
+
+        async function loadBookings() {
+            const loading = document.getElementById('bookings-loading');
+            const table = document.getElementById('bookings-table');
+            const empty = document.getElementById('bookings-empty');
+            const tbody = document.getElementById('bookings-body');
+            loading.style.display = 'block'; table.style.display = 'none'; empty.style.display = 'none';
+            
+            try {
+                const result = await apiRequest('/api/bookings');
+                loading.style.display = 'none';
+                
+                if (result.success && result.data.length > 0) {
+                    table.style.display = 'table';
+                    tbody.innerHTML = result.data.map(b => `
+                        <tr>
+                            <td><strong>${b.id}</strong></td>
+                            <td>${escapeHtml(b.guestName)}</td>
+                            <td><a href="tel:${b.guestPhone}">${escapeHtml(b.guestPhone)}</a></td>
+                            <td>${formatDate(b.checkIn)} - ${formatDate(b.checkOut)}</td>
+                            <td>${escapeHtml(b.roomType)}${b.isGroupBooking ? ' 🏰' : ''}</td>
+                            <td><strong>₹${(b.totalAmount || 0).toLocaleString('en-IN')}</strong></td>
+                            <td><span class="status-badge status-${b.status.toLowerCase()}">${b.status}</span></td>
+                            <td>
+                                <button class="action-btn btn-view" onclick="viewBooking('${b.id}')">View</button>
+                                ${b.status === 'Pending' ? `<button class="action-btn btn-confirm" onclick="updateStatus('${b.id}', 'Confirmed')">✓</button><button class="action-btn btn-cancel" onclick="updateStatus('${b.id}', 'Cancelled')">✕</button>` : ''}
+                            </td>
+                        </tr>
+                    `).join('');
+                } else { empty.style.display = 'block'; }
+            } catch (err) { 
+                console.error('Failed to load bookings:', err); 
+                loading.innerHTML = 'Failed to load. <button onclick="loadBookings()">Retry</button>'; 
+            }
+        }
+
+        async function loadInquiries() {
+            const loading = document.getElementById('inquiries-loading');
+            const table = document.getElementById('inquiries-table');
+            const empty = document.getElementById('inquiries-empty');
+            const tbody = document.getElementById('inquiries-body');
+            loading.style.display = 'block'; table.style.display = 'none'; empty.style.display = 'none';
+            
+            try {
+                const result = await apiRequest('/api/inquiries');
+                loading.style.display = 'none';
+                
+                if (result.success && result.data.length > 0) {
+                    table.style.display = 'table';
+                    tbody.innerHTML = result.data.map(i => `
+                        <tr>
+                            <td><strong>${i.id}</strong></td>
+                            <td>${escapeHtml(i.name)}</td>
+                            <td><a href="tel:${i.phone}">${escapeHtml(i.phone)}</a></td>
+                            <td>${escapeHtml(i.inquiryType)}</td>
+                            <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${escapeHtml(i.message)}">${escapeHtml(i.message)}</td>
+                            <td>${formatDateTime(i.createdAt)}</td>
+                            <td><span class="status-badge status-${i.status.toLowerCase()}">${i.status}</span></td>
+                        </tr>
+                    `).join('');
+                } else { empty.style.display = 'block'; }
+            } catch (err) { 
+                console.error('Failed to load inquiries:', err); 
+                loading.innerHTML = 'Failed to load. <button onclick="loadInquiries()">Retry</button>'; 
+            }
+        }
+
+        async function viewBooking(id) {
+            try {
+                const result = await apiRequest(`/api/bookings/${id}`);
+                if (result.success) {
+                    const b = result.data;
+                    document.getElementById('modal-body').innerHTML = `
+                        <div class="detail-row"><span class="detail-label">Booking ID</span><span class="detail-value"><strong>${b.id}</strong></span></div>
+                        <div class="detail-row"><span class="detail-label">Guest Name</span><span class="detail-value">${escapeHtml(b.guestName)}</span></div>
+                        <div class="detail-row"><span class="detail-label">Phone</span><span class="detail-value"><a href="tel:${b.guestPhone}">${escapeHtml(b.guestPhone)}</a></span></div>
+                        <div class="detail-row"><span class="detail-label">Email</span><span class="detail-value">${escapeHtml(b.guestEmail || '-')}</span></div>
+                        <div class="detail-row"><span class="detail-label">Check-in</span><span class="detail-value">${formatDate(b.checkIn)}</span></div>
+                        <div class="detail-row"><span class="detail-label">Check-out</span><span class="detail-value">${formatDate(b.checkOut)}</span></div>
+                        <div class="detail-row"><span class="detail-label">Nights</span><span class="detail-value">${b.nights || '-'}</span></div>
+                        <div class="detail-row"><span class="detail-label">Room Type</span><span class="detail-value">${escapeHtml(b.roomType)} ${b.isGroupBooking ? '(Group)' : ''}</span></div>
+                        <div class="detail-row"><span class="detail-label">Guests</span><span class="detail-value">${b.guests}</span></div>
+                        <div class="detail-row"><span class="detail-label">Meal Plan</span><span class="detail-value">${escapeHtml(b.mealPlan)}</span></div>
+                        <div class="detail-row"><span class="detail-label">Total Amount</span><span class="detail-value"><strong>₹${(b.totalAmount || 0).toLocaleString('en-IN')}</strong></span></div>
+                        <div class="detail-row"><span class="detail-label">Status</span><span class="detail-value"><span class="status-badge status-${b.status.toLowerCase()}">${b.status}</span></span></div>
+                        <div class="detail-row"><span class="detail-label">Created</span><span class="detail-value">${formatDateTime(b.createdAt)}</span></div>
+                        <div style="margin-top:1.5rem;display:flex;gap:0.5rem;">
+                            <a href="https://wa.me/${(b.guestPhone||'').replace(/[^0-9]/g,'')}" target="_blank" class="btn btn-primary" style="flex:1;text-align:center;">WhatsApp</a>
+                            <a href="tel:${b.guestPhone}" class="btn btn-secondary" style="flex:1;text-align:center;">Call</a>
+                        </div>
+                    `;
+                    document.getElementById('detail-modal').classList.add('active');
+                }
+            } catch (err) { console.error('Failed to load booking:', err); alert('Failed to load booking details'); }
+        }
+
+        async function updateStatus(id, status) {
+            if (!confirm(`Mark this booking as ${status}?`)) return;
+            try {
+                const result = await apiRequest(`/api/bookings/${id}`, { 
+                    method: 'PUT', 
+                    body: JSON.stringify({ status }) 
+                });
+                if (result.success) loadAllData();
+                else alert('Failed to update status');
+            } catch (err) { console.error('Failed to update:', err); alert('Failed to update status'); }
+        }
+
+        function closeModal() { document.getElementById('detail-modal').classList.remove('active'); }
+        document.getElementById('detail-modal').addEventListener('click', (e) => { if (e.target.id === 'detail-modal') closeModal(); });
+
+        // ==================
+        // UTILITIES
+        // ==================
+        function formatDate(dateStr) { 
+            if (!dateStr) return '-'; 
+            return new Date(dateStr).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }); 
+        }
+        
+        function formatDateTime(dateStr) { 
+            if (!dateStr) return '-'; 
+            return new Date(dateStr).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }); 
+        }
+        
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+    </script>
+</body>
+</html>

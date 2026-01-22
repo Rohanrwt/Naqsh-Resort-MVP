@@ -1,0 +1,5 @@
+User-agent: *
+Allow: /
+Disallow: /admin.html
+Disallow: /api/
+Sitemap: https://naqshresort.com/sitemap.xml
